@@ -2,6 +2,7 @@
 #include <iostream>
 #include <Windows.h>
 #include <chrono>
+#include <string>
 
 
 int main()
@@ -9,11 +10,11 @@ int main()
     int screenWidth = 120;
     int screenHeight = 40;
 
-    float playerX = 2.0f;
-    float playerY = 2.0f;
-    float playerAngle = 0.0f;
+    float playerX = 14.0f;
+    float playerY = 1.0f;
+    float playerAngle = 3.14f;
 
-    int FOV = 90;
+    float FOV = 3.14159f / 4.0f; // 90 degrees
 
     int mapHeight = 16;
     int mapWidth = 16;
@@ -26,20 +27,20 @@ int main()
     
     map += L"################";
     map += L"#              #";
-    map += L"#              #";
-    map += L"#              #";
-    map += L"#              #";
-    map += L"#              #";
-    map += L"#              #";
-    map += L"#              #";
-    map += L"#              #";
-    map += L"#      #########";
-    map += L"#              #";
-    map += L"#              #";
-    map += L"#              #";
-    map += L"#              #";
-    map += L"#              #";
-    map += L"####       #####";
+    map += L"#  #############";
+    map += L"#       #   #  #";
+    map += L"######  # # #  #";
+    map += L"#       # # #  #";
+    map += L"##### # # # #  #";
+    map += L"#   # #     #  #";
+    map += L"# # # ##### #  #";
+    map += L"# ### #     #  #";
+    map += L"#     #  ## #  #";
+    map += L"########  # #  #";
+    map += L"#         #    #";
+    map += L"#  #      #    #";
+    map += L"#  #           #";
+    map += L"####     #######";
 
     float anglePerColumn = FOV / static_cast<float>(screenWidth);
 
@@ -68,13 +69,20 @@ int main()
             playerAngle += ROTATION_SPEED * deltaTime;
         }
 
+        if (GetAsyncKeyState((unsigned short)'R') && 0x8000)
+        {
+            playerX = 14.0f;
+            playerY = 1.0f;
+            playerAngle = 3.14f;
+        }
+
         if (GetAsyncKeyState((unsigned short)'W') && 0x8000)
         {
             float oldX = playerX;
             float oldY = playerY;
 
-            playerX += cosf(playerAngle) * WALK_SPEED * deltaTime;
-            playerY += sinf(playerAngle) * WALK_SPEED * deltaTime;
+            playerX += cos(playerAngle) * WALK_SPEED * deltaTime;
+            playerY += sin(playerAngle) * WALK_SPEED * deltaTime;
 
             if (playerX >= 0 && playerY >= 0 && static_cast<int>(playerX) < mapWidth && static_cast<int>(playerY) < mapHeight)
             {
@@ -88,20 +96,33 @@ int main()
 
         if (GetAsyncKeyState((unsigned short)'S') && 0x8000)
         {
-            playerX -= cosf(playerAngle) * WALK_SPEED * deltaTime;
-            playerY -= sinf(playerAngle) * WALK_SPEED * deltaTime;
+            float oldX = playerX;
+            float oldY = playerY;
+
+            playerX -= cos(playerAngle) * WALK_SPEED * deltaTime;
+            playerY -= sin(playerAngle) * WALK_SPEED * deltaTime;
+
+            if (playerX >= 0 && playerY >= 0 && static_cast<int>(playerX) < mapWidth && static_cast<int>(playerY) < mapHeight)
+            {
+                if (map[static_cast<int>(playerX) + mapWidth * static_cast<int>(playerY)] == '#')
+                {
+                    playerX = oldX;
+                    playerY = oldY;
+                }
+            }
         }
 
         for (int i = 0; i < screenWidth; i++)
         {
             bool hitWall = false;
+            bool isFlag = false;
             // Get the distance to the wall for the current column of the console
-            float currentAngle = (playerAngle - (0.5f * FOV)) + i / static_cast<float>(screenWidth) * anglePerColumn;
+            float currentAngle = (playerAngle - (0.5f * FOV)) + i / static_cast<float>(screenWidth) * FOV;
             float distance = 0.0f;
             for (; distance < mapWidth; distance += STEP_SIZE)
             {
-                int currX = static_cast<int>(cosf(currentAngle) * distance + playerX);
-                int currY = static_cast<int>(sinf(currentAngle) * distance + playerY);
+                int currX = static_cast<int>(cos(currentAngle) * distance + playerX);
+                int currY = static_cast<int>(sin(currentAngle) * distance + playerY);
 
                 if (currX < 0 || currY < 0 || currX >= mapWidth || currY >= mapHeight)
                 {
@@ -114,6 +135,12 @@ int main()
                     hitWall = true;
                     break;
                 }
+
+                if (map[currX + currY * mapWidth] == 'F')
+                {
+                    isFlag = true;
+                    break;
+                }
             }
 
             // Add to the buffer
@@ -123,11 +150,16 @@ int main()
             for (int y = 0; y < screenHeight; y++)
             {
                 short shade = ' ';
+
+                if (isFlag)
+                {
+                    shade = '\u2590';
+                }
                 // Wall stuff
-                if (y > ceiling && y <= floor) {
-                    if (distance <= static_cast<float>(mapWidth) / 4.0f)
+                else if (y > ceiling && y <= floor) {
+                    if (distance <= static_cast<float>(mapWidth) / 6.0f)
                         shade = L'\u2588';
-                    else if (distance <= static_cast<float>(mapWidth) / 3.0f)
+                    else if (distance <= static_cast<float>(mapWidth) / 4.5f)
                         shade = L'\u2593';
                     else if (distance <= static_cast<float>(mapWidth) / 2.0f)
                         shade = L'\u2592';
@@ -162,16 +194,18 @@ int main()
             }
         }
 
-        // Add minimap
+        //// Add minimap
         for (int y = 0; y < mapHeight; y++)
         {
             for (int x = 0; x < mapWidth; x++)
             {
-                screen[x + (y  * screenWidth)] = map[x + (y * mapWidth)];
+                screen[x + (y + 1)  * screenWidth] = map[x + (y * mapWidth)];
             }
         }
 
-        screen[static_cast<int>(playerX) + static_cast<int>(playerY) * screenWidth] = '@';
+        screen[static_cast<int>(playerX) + static_cast<int>(playerY + 1) * screenWidth] = '@';
+
+        swprintf_s(screen, 40, L"A=%3.2f X=%3.2f Y=%3.2f fr=%3.0f", playerAngle, playerX, playerY, 60.0f / deltaTime);
         
 
         screen[screenWidth * screenHeight - 1] = '\0';

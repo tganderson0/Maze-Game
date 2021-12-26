@@ -1,0 +1,8 @@
+﻿  MazeGame.cpp
+D:\Programming_Projects\MazeGame\MazeGame\MazeGame\MazeGame.cpp(156,29): warning C4566: character represented by universal-character-name '\u2590' cannot be represented in the current code page (1252)
+  Generating code
+  1 of 85 functions ( 1.2%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    0 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  MazeGame.vcxproj -> D:\Programming_Projects\MazeGame\MazeGame\Release\MazeGame.exe
