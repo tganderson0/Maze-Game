@@ -5,7 +5,7 @@ Basic maze game implemented in C++.
 I was interested in developing my C++ skills a bit more, and have always loved games. I wanted to make a basic Wolfenstein-like renderer in the console, after
 seeing someone else do a similar thing on YouTube.
 
-![Image of Game]('./mazegame.jpg')
+<img src="mazegame.jpg" alt="image of game" />
 
 ## Features
 
